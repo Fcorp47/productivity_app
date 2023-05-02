@@ -11,6 +11,7 @@ import '../constants/colors.dart';
 import '../widgets/todo_item.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
 class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
 
@@ -20,10 +21,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  final user = FirebaseAuth.instance.currentUser;
-
-  final Stream<QuerySnapshot> studentsStream = FirebaseFirestore.instance.collection('tasks').snapshots();
-
+  var user = FirebaseAuth.instance.currentUser;
   CollectionReference tasks = FirebaseFirestore.instance.collection('tasks');
 
 //here is delete function
@@ -36,6 +34,25 @@ class _HomeState extends State<Home> {
         .catchError((error) => print('Failed to delte user: $error'));
   }
 
+
+  Future<void> updateUser(id,statuss) {
+    var status='';
+    if(statuss=='1')
+      {
+        status = '0';
+      }
+    else{
+      status = '1';
+    }
+   /* return tasks.doc(id)
+        .update({'task': _todoController.text,'email':emailid,'status':status})
+        .catchError((error) => print("failed to update user: $error"));*/
+    return tasks.doc(id)
+        .update({'status':status})
+        .catchError((error) => print("failed to update user: $error"));
+  }
+
+
   final status=1;
   final todosList = ToDo.todoList();
   List<ToDo> _foundToDo = [];
@@ -47,115 +64,204 @@ class _HomeState extends State<Home> {
     super.initState();
   }
 
+  String emailid = FirebaseAuth.instance.currentUser!.email.toString();
+
+
+
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-      drawer: my_drawer(context),
-      backgroundColor: Colors.grey,
-      appBar: myappbar(),
-      body: Stack(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 15,
-            ),
-            child: Column(
-              children: [
-                searchBox(),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      Container(
-                          margin: EdgeInsets.only(
-                            top: 50,
-                            bottom: 20,
-                          ),
-                          child: Center(
-                            child: Text(
-                              'TASK LIST',
-                              style: TextStyle(
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white),
-                            ),
-                          )),
-                      for (ToDo todoo in _foundToDo.reversed)
-                        ToDoItem(
-                          todo: todoo,
-                          onToDoChanged: _handleToDoChange,
-                          onDeleteItem: _deleteToDoItem,
-                        ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Row(children: [
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(
-                    bottom: 20,
-                    right: 20,
-                    left: 20,
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.red,
-                        offset: Offset(0.0, 0.0),
-                        blurRadius: 10.0,
-                        spreadRadius: 0.0,
-                      ),
-                    ],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: TextField(
-                    controller: _todoController,
-                    decoration: InputDecoration(
-                        hintText: 'Add a new task',
-                        border: InputBorder.none),
-                  ),
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                  bottom: 20,
-                  right: 20,
-                ),
-                child: ElevatedButton(
-                  child: Text(
-                    '+',
-                    style: TextStyle(
-                      fontSize: 30,
-                    ),
-                  ),
-                  onPressed: () {
-                   _addToDoItem(_todoController.text);
+    final Stream<QuerySnapshot> taskStream = FirebaseFirestore.instance.collection('tasks')
+        .where("email",isEqualTo: emailid).snapshots();
+    return StreamBuilder<QuerySnapshot>(
+        stream: taskStream,
+        builder:
+            (BuildContext context,
+            AsyncSnapshot<QuerySnapshot>snapshot) {
+              if (snapshot.hasError) {
+                print('Something went wrong !!');
+              }
 
-                  },
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.red,
-                    minimumSize: Size(10, 10),
-                    elevation: 20,
-                  ),
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              final List storedocs = [];
+              snapshot.data!.docs.map((DocumentSnapshot document) {
+                Map a = document.data() as Map<String, dynamic>;
+                storedocs.add(a);
+                a['id'] = document.id;
+              }).toList();
+
+              return Scaffold(
+                drawer: my_drawer(context),
+                backgroundColor: Colors.grey,
+                appBar: myappbar(),
+                body: Stack(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 15,
+                      ),
+                      child: Column(
+                        children: [
+                          searchBox(),
+                          Expanded(
+                            child: ListView(
+                              children: [
+                                Container(
+                                    margin: EdgeInsets.only(
+                                      top: 50,
+                                      bottom: 20,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'TASK LIST',
+                                        style: TextStyle(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white),
+                                      ),
+                                    )),
+
+
+                                //for loop iterate the whole tasks....
+
+                                // for (ToDo todoo in _foundToDo.reversed)
+
+                                for(var i = 0; i < storedocs.length; i++)...[
+
+                                  Container(
+                                    margin: EdgeInsets.symmetric(vertical: 5),
+                                    child: ListTile(
+
+                                      onTap: () {
+
+                                          updateUser(storedocs[i]['id'],storedocs[i]['status']);
+                                         // Navigator.pop(context);
+
+
+                                        // onToDoChanged(todo);
+                                      },
+
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 5),
+                                      tileColor: Colors.black,
+                                      leading: Icon(
+                                        storedocs[i]['status']=="0" ? Icons.check_box : Icons.check_box_outline_blank,
+                                        color: Colors.white,
+                                      ),
+
+
+                                      title: Text(
+
+                                        storedocs[i]['task'],
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.white,
+                                          ),
+                                      ),
+                                      trailing: Container(
+                                        padding: EdgeInsets.all(0),
+                                        margin: EdgeInsets.symmetric(
+                                            vertical: 12),
+                                        height: 35,
+                                        width: 35,
+
+                                        child: IconButton(
+                                          color: Colors.red,
+                                          iconSize: 25,
+                                          icon: Icon(Icons
+                                              .remove_circle_outline_sharp),
+                                          onPressed: () {
+                                            deleteUser(storedocs[i]['id']);
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  )
+
+                                ]
+                              ],
+                            ),
+
+                            //for loop ends here  --- remark
+                          )
+                        ],
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Row(children: [
+                        Expanded(
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              bottom: 20,
+                              right: 20,
+                              left: 20,
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.red,
+                                  offset: Offset(0.0, 0.0),
+                                  blurRadius: 10.0,
+                                  spreadRadius: 0.0,
+                                ),
+                              ],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: TextField(
+                              controller: _todoController,
+                              decoration: InputDecoration(
+                                  hintText: 'Add a new task',
+                                  border: InputBorder.none),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(
+                            bottom: 20,
+                            right: 20,
+                          ),
+                          child: ElevatedButton(
+                            child: Text(
+                              '+',
+                              style: TextStyle(
+                                fontSize: 30,
+                              ),
+                            ),
+                            onPressed: () {
+                              _addToDoItem(_todoController.text);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.red,
+                              minimumSize: Size(10, 10),
+                              elevation: 20,
+                            ),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ],
                 ),
-              ),
-            ]),
-          ),
-        ],
-      ),
-    );
+              );
+            });
   }
+
+
+
   Future<void> addUser() {
     //print("User Added");
     return tasks
@@ -163,6 +269,7 @@ class _HomeState extends State<Home> {
         .then((value) => print('Task added!!'))
         .catchError((error) => print('Failed to add: $error'));
   }
+
   AppBar myappbar() {
     return AppBar(
       backgroundColor: Colors.black,

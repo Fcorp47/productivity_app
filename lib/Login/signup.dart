@@ -32,6 +32,18 @@ Future SignUp() async {
         email: emailController.text,
         password: passwordController.text,
       );
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: Text('User Created Successfully'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> Login() )),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     } on FirebaseAuthException catch (e) {
 
       showDialog(

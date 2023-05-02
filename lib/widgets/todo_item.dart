@@ -46,11 +46,11 @@ class ToDoItem extends StatelessWidget {
 
 
           return Container(
+
             margin: EdgeInsets.only(bottom: 20),
             child: ListTile(
               onTap: () {
                 // print('Clicked on Todo Item.');
-
                 onToDoChanged(todo);
               },
 
@@ -63,6 +63,7 @@ class ToDoItem extends StatelessWidget {
                 todo.isDone ? Icons.check_box : Icons.check_box_outline_blank,
                 color: Colors.white,
               ),
+
               title: Text(
                 todo.todoText!,
                 style: TextStyle(

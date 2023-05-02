@@ -35,7 +35,7 @@ class _LoginState extends State<Login> {
         email: emailController.text,
         password: passwordController.text,
       );
-      Navigator.of(context).pop();
+      Navigator.push(context, MaterialPageRoute(builder: (context)=> Home() ));;
     } on FirebaseException catch (e) {
       print(e);
       Navigator.of(context).pop();

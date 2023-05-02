@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_todo_app/Login/login.dart';
 import 'package:flutter_todo_app/Login/register.dart';
 import 'package:flutter_todo_app/Testing/Test1.dart';
 import 'package:flutter_todo_app/screens/home.dart';
@@ -6,6 +7,9 @@ import 'package:flutter_todo_app/screens/imptask.dart';
 import 'package:flutter_todo_app/screens/option_cards.dart';
 import 'package:flutter_todo_app/screens/waterintake.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+
+final FirebaseAuth auth = FirebaseAuth.instance;
 
 Widget my_drawer(BuildContext context)
 {
@@ -66,7 +70,9 @@ Widget my_drawer(BuildContext context)
               style: TextStyle(fontSize: 20),
             ),
             onTap: () {
+
               FirebaseAuth.instance.signOut();
+              Navigator.push(context, MaterialPageRoute(builder: (context)=> Login() ));
               /* Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => WaterIntake()));*/
             },
